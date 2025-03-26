@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-dt83f_@7$k5_-$_2(--1f@^nir&(tiv-0ss7h@8lhnb&5p$8vb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['django-react-272508642139.asia-northeast1.run.app']
 
 
 # Application definition
