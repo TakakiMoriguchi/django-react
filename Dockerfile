@@ -25,7 +25,10 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt gunicorn whitenoise
 
 # フロントエンドのビルド成果物を Django の staticfiles にコピー
-COPY --from=frontend-build /app/client /app/staticfiles
+COPY --from=frontend-build /app/client/dist /app/staticfiles
+
+# Django 静的ファイル収集
+RUN python manage.py collectstatic --noinput
 
 # 必要なポートを公開（Cloud Run の環境変数に対応）
 ENV PORT=8080
