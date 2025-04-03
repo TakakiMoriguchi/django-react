@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-dt83f_@7$k5_-$_2(--1f@^nir&(tiv-0ss7h@8lhnb&5p$8vb
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'django-react-272508642139.asia-northeast1.run.app',
+    'django-react-219245962241.asia-northeast1.run.app',
     '127.0.0.1',
     'localhost'
 ]
