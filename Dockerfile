@@ -1,32 +1,38 @@
-# Pythonベースのイメージ
-FROM python:3.11
+# フロントエンド（React）ビルド
+FROM node:18 AS frontend-build
 
-EXPOSE 8080
-ENV PORT=8080
-ENV GUNICORN_CMD_ARGS="--bind 0.0.0.0:$PORT"
-
-# Node.jsを追加インストール
-RUN apt-get update && apt-get install -y curl && \
-  curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-  apt-get install -y nodejs
-
-# 作業ディレクトリ
-WORKDIR /app
-
-# 必要なファイルをコピー
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Djangoプロジェクトをコピー
-COPY . .
-
-# Reactのビルド（必要なら）
-WORKDIR /app/frontend
+# まずclientディレクトリをコピー
+COPY client /app/client
+# 作業ディレクトリを変更
+WORKDIR /app/client
+# npmコマンドを実行
 RUN npm install && npm run build
 
-# 環境変数設定
-ENV DJANGO_SETTINGS_MODULE=config.settings.production
+# 最終ステージ（Cloud Run 用）
+FROM python:3.11-slim
 
-# スタートアップコマンド
-# CMD ["python", "manage.py","runserver","0.0.0.0:{$PORT}"]
-CMD ["gunicorn", "--bind", "0.0.0.0:${PORT}", "config.wsgi:application"]
+# システムパッケージのインストール
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+COPY . .
+
+# 依存関係をインストール
+RUN pip install --no-cache-dir -r requirements.txt gunicorn whitenoise
+
+# フロントエンドのビルド成果物を Django の staticfiles にコピー
+COPY --from=frontend-build /app/client/dist /app/staticfiles
+
+# Django 静的ファイル収集
+RUN python manage.py collectstatic --noinput
+
+# 必要なポートを公開（Cloud Run の環境変数に対応）
+ENV PORT=8080
+EXPOSE 8080
+
+# Cloud Run では 1プロセスのみ実行可能なため gunicorn を使用
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "config.wsgi:application"]
